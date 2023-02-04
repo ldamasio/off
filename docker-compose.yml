@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+  backend:
+    container_name: DJANGO_backend
+    build: ./django_api
+    command: python manage.py runserver 0.0.0.0:8001
+    ports:
+      - "8001:8001"
+    depends_on:
+      - db
+    networks:
+      - db_bridge
+  db:
+    container_name: PSQL_db
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    networks:
+      - db_bridge
+  populate:
+    container_name: PANDAS_populate
+    build: ./pandas_csv
+    command: python main.py
+    depends_on:
+      - backend
+    networks:
+      - db_bridge
+
+volumes:
+  postgres_data:
+
+networks:
+  db_bridge:
+    name: db_bridge
+    driver: bridge
